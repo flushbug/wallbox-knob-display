@@ -9,7 +9,10 @@ It works with any charge controller that provides its values and a mode select a
 entities. The defaults are set up for [evcc](https://evcc.io); other controllers (for example openWB,
 go-e or a wallbox integration) work by mapping your own entities and mode options.
 
-<p align="center"><img src="docs/preview.svg" width="300" alt="Display preview"></p>
+<p align="center">
+  <img src="docs/photo.jpg" width="300" alt="Knob display on the desk">
+  <img src="docs/preview.svg" width="300" alt="Display layout preview">
+</p>
 
 ## Features
 
