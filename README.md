@@ -14,6 +14,15 @@ go-e or a wallbox integration) work by mapping your own entities and mode option
   <img src="docs/preview.svg" width="300" alt="Display layout preview">
 </p>
 
+## Two variants
+
+| Variant | Needs | Where |
+|---|---|---|
+| **ESPHome package** | Home Assistant + ESPHome, charge controller entities in HA | this page |
+| **Standalone firmware** | only evcc, no Home Assistant | [`standalone/`](standalone/) |
+
+Both offer the same screen and knob functions and are maintained together.
+
 ## Features
 
 - **Charge ring** along the edge: wallbox charge power, full scale configurable (default 22 kW).
