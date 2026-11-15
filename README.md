@@ -81,6 +81,7 @@ Without a home battery, simply leave the defaults: the left battery then stays e
 | `max_charge_kw` | `22.0` | Full scale of the charge ring |
 | `batt_threshold_w` | `50.0` | Battery counts as (dis)charging above this power |
 | `display_timeout_default` | `120` | Initial display timeout in seconds |
+| `backlight_name` / `timeout_name` | `Display Backlight` / `Display Timeout` | Entity names in Home Assistant |
 | `anim_steps` | `8` | Animation steps (× 400 ms) |
 | `wake_guard_ms` | `600` | Knob steps right after waking up are ignored this long |
 

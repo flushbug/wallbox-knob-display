@@ -60,6 +60,8 @@ substitutions:
   batt_threshold_w: "50.0"        # battery counts as (dis)charging above this power
   wake_guard_ms: "600"            # knob steps right after waking up are ignored this long
   display_timeout_default: "120"  # initial display timeout in s (changeable in HA)
+  backlight_name: "Display Backlight"     # name of the backlight entity in HA
+  timeout_name: "Display Timeout"         # name of the timeout entity in HA
 
 esphome:
   on_boot:
@@ -99,7 +101,7 @@ globals:
 number:
   - platform: template
     id: display_timeout
-    name: "Display Timeout"
+    name: "${timeout_name}"
     icon: mdi:timer-outline
     entity_category: config
     unit_of_measurement: s
@@ -295,7 +297,7 @@ output:
 light:
   - platform: monochromatic
     id: backlight
-    name: "Display Backlight"
+    name: "${backlight_name}"
     output: backlight_pwm
     restore_mode: ALWAYS_ON
     default_transition_length: 0s
