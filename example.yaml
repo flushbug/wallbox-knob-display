@@ -1,0 +1,53 @@
+# Example device config for the wallbox knob display.
+# Copy this file into your ESPHome dashboard, adjust it and install it.
+
+substitutions:
+  name: wallbox-knob
+  friendly_name: Wallbox Knob
+
+  # Map your own Home Assistant entities here. Only list the ones that differ
+  # from the defaults in wallbox-knob.yaml. The defaults fit evcc
+  # ("garage" is the evcc loadpoint title); for other controllers map your own entities.
+  entity_pv_power: sensor.evcc_pv_power
+  entity_charge_power: sensor.evcc_garage_charge_power
+  entity_charging: binary_sensor.evcc_garage_charging
+  entity_mode: select.evcc_garage_mode
+  entity_phases_active: sensor.evcc_garage_phases_active
+  entity_car_soc: sensor.evcc_garage_vehicle_soc
+  entity_home_batt_soc: sensor.evcc_battery_soc
+  entity_home_batt_power: sensor.evcc_battery_power
+
+  # Optional: German texts on the display
+  # label_off: "Aus"
+  # label_smart: "Smart"
+  # label_now: "Sofort"
+  # label_confirm: "Drücken = OK"
+
+  # Optional: charging station icon instead of the evcc logo
+  # charge_icon: "wallbox"
+
+packages:
+  wallbox_knob:
+    url: https://github.com/flushbug/wallbox-knob-display
+    ref: main
+    files: [wallbox-knob.yaml]
+    refresh: 1d
+
+esphome:
+  name: ${name}
+  friendly_name: ${friendly_name}
+
+api:
+  encryption:
+    key: !secret wallbox_knob_api_key
+
+ota:
+  - platform: esphome
+    password: !secret wallbox_knob_ota_password
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  ap:
+    ssid: ${friendly_name} Fallback
+    password: !secret wallbox_knob_ap_password
