@@ -55,6 +55,8 @@ substitutions:
 
   # ---- Look and behaviour
   charge_icon: "evcc"             # "evcc" = evcc logo, "wallbox" = charging station icon
+  show_home_battery: "true"       # "false" hides the home battery (e.g. if you have none)
+  display_rotation: "0"           # 0, 90, 180 or 270 degrees, depending on the mounting position
   max_charge_kw: "22.0"           # full scale of the ring
   anim_steps: "8"                 # animation steps (x 400 ms)
   batt_threshold_w: "50.0"        # battery counts as (dis)charging above this power
@@ -245,7 +247,7 @@ interval:
               if (id(pending_idx) >= 0) return false;
               bool car = id(ev_charging).state;
               float hp = id(home_batt_power).state;
-              bool home = !isnan(hp) && fabsf(hp) > ${batt_threshold_w};
+              bool home = ${show_home_battery} && !isnan(hp) && fabsf(hp) > ${batt_threshold_w};
               return car || home;
           then:
             - lambda: 'id(anim_step) = (id(anim_step) + 1) % (${anim_steps} + 3);'
@@ -356,6 +358,7 @@ display:
       number: GPIO2
       ignore_strapping_warning: true
     invert_colors: true
+    rotation: ${display_rotation}
     data_rate: 20MHz
     update_interval: 2s
     lambda: |-
@@ -485,7 +488,7 @@ display:
         if (is_car) draw_car(x + w / 2, y + h + 6);
         else        draw_house(x + w / 2, y + h + 6);
       };
-      draw_batt(30, id(home_batt_soc).state, false, home_dir);
+      if (${show_home_battery}) draw_batt(30, id(home_batt_soc).state, false, home_dir);
       draw_batt(188, id(car_soc).state, true, charging ? 1 : 0);
 
       // --- PV power in kW with solar panel icon

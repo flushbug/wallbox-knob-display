@@ -1,5 +1,6 @@
 // Rotary encoder (quadrature, interrupt driven) and push button.
 #include "app.h"
+#if !defined(BOARD_TDISPLAY_S3)
 
 static volatile int32_t transitions = 0;   // valid quadrature transitions, signed
 static volatile uint8_t lastAB = 0;
@@ -48,3 +49,5 @@ bool knobTakePress() {
   pressed = false;
   return true;
 }
+
+#endif

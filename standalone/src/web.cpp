@@ -47,7 +47,7 @@ body{font-family:system-ui,sans-serif;background:var(--bg);color:var(--fg);margi
 main{max-width:560px;margin:auto}h1{font-size:22px;margin:4px 0 16px}
 section{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:12px 16px;margin-bottom:16px}
 h2{font-size:16px;margin:4px 0 12px}label{display:block;font-size:14px;color:var(--mut);margin:10px 0 4px}
-input[type=text],input[type=password],input[type=number],input[type=url]{width:100%;box-sizing:border-box;padding:8px;
+input[type=text],input[type=password],input[type=number],input[type=url],select{width:100%;box-sizing:border-box;padding:8px;
 border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--fg);font-size:15px}
 .row{display:grid;grid-template-columns:auto 1fr;gap:6px 10px;align-items:center}
 .row label{margin:0}button{padding:9px 16px;border-radius:8px;border:1px solid var(--acc);background:var(--acc);
@@ -81,6 +81,7 @@ static void handleRoot() {
   }
   h += "<tr><td>IP</td><td>" + (setup_ ? WiFi.softAPIP().toString() : WiFi.localIP().toString()) + "</td></tr>";
   h += "<tr><td>Firmware</td><td>" FW_VERSION "</td></tr>";
+  h += "<tr><td>Board</td><td>" + String(BOARD_NAME) + "</td></tr>";
   h += "</table></section>";
 
   // ---- settings
@@ -102,17 +103,29 @@ static void handleRoot() {
   h += "<section><h2>Display</h2>";
   h += "<label>Display timeout (s, 0 = never off)</label><input type='number' min='0' max='3600' name='tout' value='" + String(cfg.timeoutS) + "'>";
   h += "<label>Brightness (%)</label><input type='number' min='5' max='100' name='bright' value='" + String(cfg.brightness) + "'>";
-  h += "<label>Full scale of the charge ring (kW)</label><input type='number' min='1' max='100' step='0.1' name='maxkw' value='" + String(cfg.maxKw, 1) + "'>";
-  h += "<label>Charge icon</label><div class='row'>";
+  h += "<label>Rotation (clockwise, depending on the mounting position)</label><select name='rot'>";
+  for (int r = 0; r < 4; r += HAS_KNOB ? 1 : 2)   // rectangular display: landscape only
+    h += "<option value='" + String(r) + "'" + String(cfg.rotation == r ? " selected" : "") + ">" + String(r * 90) + "&deg;</option>";
+  h += "</select>";
+  h += String("<label>Full scale of the charge ") + (HAS_KNOB ? "ring" : "bar") + " (kW)</label><input type='number' min='1' max='100' step='0.1' name='maxkw' value='" + String(cfg.maxKw, 1) + "'>";
+  h += HAS_KNOB ? "<label>Charge icon</label><div class='row'>" : "<label>Select button hint</label><div class='row'>";
   h += "<input type='radio' name='logo' value='1' id='l1'" + String(cfg.evccLogo ? " checked" : "") + "><label for='l1'>evcc logo</label>";
-  h += "<input type='radio' name='logo' value='0' id='l0'" + String(cfg.evccLogo ? "" : " checked") + "><label for='l0'>charging station</label></div>";
-  h += "<label>Modes on the knob and their texts</label><div class='row'>";
+  h += "<input type='radio' name='logo' value='0' id='l0'" + String(cfg.evccLogo ? "" : " checked") + "><label for='l0'>" + String(HAS_KNOB ? "charging station" : "text (below)") + "</label></div>";
+  h += "<div class='row' style='margin-top:8px'><input type='checkbox' name='hbatt' value='1' id='hb'" + String(cfg.showHomeBatt ? " checked" : "") + "><label for='hb'>show home battery</label></div>";
+  h += String("<label>Modes on the ") + (HAS_KNOB ? "knob" : "select button") + " and their texts</label><div class='row'>";
   for (int i = 0; i < MODE_COUNT; i++) {
     h += "<input type='checkbox' name='m" + String(i) + "e' value='1'" + String(cfg.modeEnabled[i] ? " checked" : "") + ">";
     h += "<input type='text' name='m" + String(i) + "l' value='" + esc(cfg.label[i]) + "' placeholder='label'>";
     h += "<input type='text' name='m" + String(i) + "a' value='" + esc(cfg.modeApi[i]) + "' placeholder='evcc name' style='grid-column:2'>";
   }
-  h += "</div><label>Confirm hint</label><input type='text' name='lconf' value='" + esc(cfg.labelConfirm) + "'>";
+  h += "</div>";
+  if (HAS_KNOB) {
+    h += "<label>Confirm hint</label><input type='text' name='lconf' value='" + esc(cfg.labelConfirm) + "'>";
+  } else {
+    h += "<label>Text next to the select button</label><input type='text' name='lsel' value='" + esc(cfg.labelSelect) + "'>";
+    h += "<label>Text next to the confirm button</label><input type='text' name='lconf' value='" + esc(cfg.labelConfirm) + "'>";
+    h += "<div class='row' style='margin-top:8px'><input type='checkbox' name='swapbtn' value='1' id='sb'" + String(cfg.swapButtons ? " checked" : "") + "><label for='sb'>swap select and confirm button</label></div>";
+  }
   h += "<small>Display texts: letters, digits and simple punctuation; ä ö ü ß become ae oe ue ss.</small></section>";
 
   h += "<section><h2>Security</h2>";
@@ -159,9 +172,11 @@ static void handleSave() {
   cfg.pollMs = constrain(arg("poll").toInt(), 500, 60000);
   cfg.timeoutS = constrain(arg("tout").toInt(), 0, 3600);
   cfg.brightness = constrain(arg("bright").toInt(), 5, 100);
+  if (server.hasArg("rot")) cfg.rotation = arg("rot").toInt() & (HAS_KNOB ? 3 : 2);
   float mk = arg("maxkw").toFloat();
   if (mk > 0) cfg.maxKw = mk;
   cfg.evccLogo = arg("logo") != "0";
+  cfg.showHomeBatt = server.hasArg("hbatt");
   bool any = false;
   for (int i = 0; i < MODE_COUNT; i++) {
     String k = String("m") + i;
@@ -172,6 +187,8 @@ static void handleSave() {
   }
   if (!any) for (bool &e : cfg.modeEnabled) e = true;
   if (server.hasArg("lconf")) cfg.labelConfirm = arg("lconf");
+  if (server.hasArg("lsel")) cfg.labelSelect = arg("lsel");
+  if (!HAS_KNOB) cfg.swapButtons = server.hasArg("swapbtn");
   if (server.hasArg("aclear")) cfg.adminPass = "";
   else if (!arg("apass").isEmpty()) cfg.adminPass = server.arg("apass");
   configSave();

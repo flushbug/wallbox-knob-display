@@ -1,6 +1,7 @@
 # PlatformIO post-build script: after every build, write flashable images to bin/
-#   wallbox-knob-<version>-full.bin  bootloader + partitions + app, flash at 0x0 (first install)
-#   wallbox-knob-<version>-ota.bin   app only, for the web update / OTA
+#   <name>-<version>-full.bin  bootloader + partitions + app, flash at 0x0 (first install)
+#   <name>-<version>-ota.bin   app only, for the web update / OTA
+# <name> comes from custom_image_name in platformio.ini (one per board).
 Import("env")  # noqa: F821
 import os
 import re
@@ -19,11 +20,12 @@ def merge_bin(source, target, env):
     app = os.path.join(build_dir, env.subst("${PROGNAME}.bin"))
     out_dir = os.path.join(env.subst("$PROJECT_DIR"), "bin")
     os.makedirs(out_dir, exist_ok=True)
-    for f in os.listdir(out_dir):  # keep only the current version
-        if f.endswith(".bin"):
+    name = env.GetProjectOption("custom_image_name", env.subst("$PIOENV"))
+    for f in os.listdir(out_dir):  # keep only the current version of this board
+        if f.startswith(name + "-") and f.endswith(".bin"):
             os.remove(os.path.join(out_dir, f))
 
-    base = os.path.join(out_dir, "wallbox-knob-" + _version(env))
+    base = os.path.join(out_dir, name + "-" + _version(env))
     full = base + "-full.bin"
     ota = base + "-ota.bin"
 

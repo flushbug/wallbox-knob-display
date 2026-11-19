@@ -28,8 +28,13 @@ void configLoad() {
     if (cfg.modeApi[i].isEmpty()) cfg.modeApi[i] = d.modeApi[i];
   }
   cfg.labelConfirm = prefs.getString("lconf", d.labelConfirm);
+  cfg.labelSelect = prefs.getString("lsel", d.labelSelect);
+  cfg.swapButtons = prefs.getBool("swapbtn", d.swapButtons);
   cfg.evccLogo = prefs.getBool("logo", d.evccLogo);
+  cfg.showHomeBatt = prefs.getBool("hbatt", d.showHomeBatt);
   cfg.brightness = prefs.getUChar("bright", d.brightness);
+  cfg.rotation = prefs.getUChar("rot", d.rotation) & 3;
+  if (!HAS_KNOB) cfg.rotation &= 2;   // landscape only: 0 or 180 degrees
   prefs.end();
 
   if (cfg.hostname.isEmpty()) cfg.hostname = d.hostname;
@@ -62,8 +67,12 @@ void configSave() {
     prefs.putString((k + "a").c_str(), cfg.modeApi[i]);
   }
   prefs.putString("lconf", cfg.labelConfirm);
+  prefs.putString("lsel", cfg.labelSelect);
+  prefs.putBool("swapbtn", cfg.swapButtons);
   prefs.putBool("logo", cfg.evccLogo);
+  prefs.putBool("hbatt", cfg.showHomeBatt);
   prefs.putUChar("bright", cfg.brightness);
+  prefs.putUChar("rot", cfg.rotation);
   prefs.end();
 }
 
@@ -72,4 +81,15 @@ void configReset() {
   prefs.clear();
   prefs.end();
   cfg = Config();
+}
+
+// display fonts are ASCII only
+String asciiLabel(const String &in) {
+  String s = in;
+  s.replace("ä", "ae"); s.replace("ö", "oe"); s.replace("ü", "ue");
+  s.replace("Ä", "Ae"); s.replace("Ö", "Oe"); s.replace("Ü", "Ue");
+  s.replace("ß", "ss");
+  String out;
+  for (char c : s) out += (c >= 32 && c < 127) ? c : '?';
+  return out;
 }

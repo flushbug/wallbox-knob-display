@@ -19,6 +19,7 @@ static bool displayOn = false;
 static uint32_t lastActivity = 0, wokeAt = 0, pendingAt = 0, lastAnim = 0, setupSince = 0;
 static uint32_t lastVersion = 0;
 static uint8_t appliedBrightness = 0;
+static uint8_t appliedRotation = 0;
 static bool dirty = true;
 
 static void wake() {
@@ -59,7 +60,7 @@ static void startSetupAp() {
   uint8_t mac[6];
   WiFi.macAddress(mac);
   char ssid[32];
-  snprintf(ssid, sizeof ssid, "WallboxKnob-%02X%02X", mac[4], mac[5]);
+  snprintf(ssid, sizeof ssid, "%s-%02X%02X", AP_PREFIX, mac[4], mac[5]);
   WiFi.mode(WIFI_AP);
   WiFi.setTxPower(WIFI_POWER_8_5dBm);     // phone is close during setup; full power makes the C3 AP unstable
   WiFi.softAP(ssid, nullptr, 6);          // open network, fixed channel 6
@@ -130,6 +131,7 @@ void setup() {
   webBegin(ui.setupMode);
   if (!ui.setupMode) evccBegin();
 
+  appliedRotation = cfg.rotation;
   lastActivity = millis();
   wake();
 }
@@ -189,8 +191,15 @@ void loop() {
     appliedBrightness = cfg.brightness;
   }
 
+  // ---- rotation changed on the settings page
+  if (appliedRotation != cfg.rotation) {
+    displaySetRotation(cfg.rotation);
+    appliedRotation = cfg.rotation;
+    dirty = true;
+  }
+
   // ---- animation while charging or the home battery is active
-  bool active = s.charging || (!isnan(s.battW) && fabsf(s.battW) > 50);
+  bool active = s.charging || (cfg.showHomeBatt && !isnan(s.battW) && fabsf(s.battW) > 50);
   if (displayOn && ui.pending < 0 && active && now - lastAnim >= ANIM_INTERVAL_MS) {
     lastAnim = now;
     ui.animStep = (ui.animStep + 1) % (ui.animSteps + 3);
