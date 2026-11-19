@@ -1,17 +1,32 @@
 # Wallbox knob display – standalone firmware
 
-The same display and knob functions as the ESPHome package, but **without ESPHome and Home Assistant**.
+The same display functions as the ESPHome package, but **without ESPHome and Home Assistant**.
 The firmware talks directly to the [evcc](https://evcc.io) REST API and brings its own settings page.
 
-> Status: early version (0.1.0), tested on the hardware with evcc 0.319.
+It runs on two boards:
+
+| Board | Display | Operation | PlatformIO env | Image |
+|---|---|---|---|---|
+| VIEWE UEDX24240013-MD50E | 1.28" round, 240×240 | rotary knob with push button | `wallbox-knob` | `bin/wallbox-knob-<version>-*.bin` |
+| LilyGO T-Display-S3 | 1.9" rectangular, 320×170 (landscape) | two buttons: select and confirm | `tdisplay-s3` | `bin/tdisplay-s3-<version>-*.bin` |
+
+<p align="center">
+  <img src="../docs/tdisplay-preview.png" width="480" alt="T-Display-S3 layout preview">
+</p>
+
+> Status: early version (0.2.0), tested on both boards with evcc 0.319.
 
 ## Features
 
-- Same screen as the ESPHome version: charge ring, PV and charge power, home and vehicle battery,
-  charge mode, active phases, animations while charging
-- Turn to preselect the charge mode (Off, Smart, Fast), press to send it to evcc; choose which
-  modes are on the knob and how they are labelled
-- Display timeout; turning or pressing wakes the display without changing the mode
+- Charge power as a ring (round display) or bar (T-Display), PV and charge power, home and vehicle
+  battery, charge mode, active phases, animations while charging
+- Select a charge mode (Off, Smart, Fast) and confirm it to send it to evcc; choose which modes are
+  offered and how they are labelled
+  - round display: turn the knob to preselect, press to confirm
+  - T-Display: the upper button (KEY) selects the next mode, the lower button (BOOT) confirms;
+    hints next to the buttons show which is which
+- Display timeout; any input wakes the display without changing the mode
+- Rotation for the mounting position, home battery can be hidden
 - Local web page for all settings, status and firmware update
 - WiFi setup via its own access point with captive portal
 - Over-the-air updates via the web page or PlatformIO (ArduinoOTA)
@@ -19,22 +34,27 @@ The firmware talks directly to the [evcc](https://evcc.io) REST API and brings i
 
 ## Flash a ready-made image
 
-The folder [`bin/`](bin/) contains the current firmware as ready-to-flash images:
+The folder [`bin/`](bin/) contains the current firmware for both boards as ready-to-flash images:
 
 | File | Use |
 |---|---|
-| `wallbox-knob-<version>-full.bin` | First install via USB, flash at offset **0x0** (bootloader, partitions and firmware) |
-| `wallbox-knob-<version>-ota.bin` | Update via the settings page (Firmware update) |
+| `<board>-<version>-full.bin` | First install via USB, flash at offset **0x0** (bootloader, partitions and firmware) |
+| `<board>-<version>-ota.bin` | Update via the settings page (Firmware update) |
 
 Without installing anything: open the [ESP web flasher](https://espressif.github.io/esptool-js/) in Chrome or Edge,
-connect the display via USB, click *Connect*, choose the `-full.bin` at address `0x0` and click *Program*.
+connect the board via USB, click *Connect*, choose the `-full.bin` at address `0x0` and click *Program*.
 With esptool:
 
 ```bash
-esptool.py --chip esp32c3 write_flash 0x0 wallbox-knob-0.1.0-full.bin
+esptool.py --chip esp32c3 write_flash 0x0 wallbox-knob-0.2.0-full.bin
 ```
 
-If the board is not detected, hold the knob button while plugging in USB (boot mode).
+```bash
+esptool.py --chip esp32s3 write_flash 0x0 tdisplay-s3-0.2.0-full.bin
+```
+
+If the board is not detected, hold the knob button (round display) or the BOOT button (T-Display)
+while plugging in USB (boot mode).
 
 ## Build and flash
 
@@ -42,19 +62,26 @@ Requires [PlatformIO](https://platformio.org) (CLI or the VS Code extension).
 
 ```bash
 cd standalone
-pio run -e wallbox-knob -t upload        # first time via USB
-pio run -e wallbox-knob-ota -t upload    # later over the air
+pio run -e wallbox-knob -t upload        # round display, first time via USB
+pio run -e wallbox-knob-ota -t upload    # later over the air (wallbox-knob.local)
+pio run -e tdisplay-s3 -t upload         # T-Display-S3, first time via USB
+pio run -e tdisplay-s3-ota -t upload     # later over the air (wallbox-display.local)
 ```
 
-Every build also writes both images to `bin/` (script `scripts/merge_bin.py`). The version comes
-from `FW_VERSION` in `platformio.ini`.
+Every build also writes both images of the board to `bin/` (script `scripts/merge_bin.py`). The version
+comes from `FW_VERSION` in `platformio.ini`.
+
+`tools/preview.py` renders both layouts as PNG without a device, with the same coordinates as the
+firmware (`python tools/preview.py out.png --board tdisplay|knob`).
 
 ## First start
 
-1. After flashing, the display shows **Setup** and the name of a WiFi network (`WallboxKnob-XXXX`).
+1. After flashing, the display shows **Setup** and the name of a WiFi network
+   (`WallboxKnob-XXXX` or `WallboxDisplay-XXXX`).
 2. Connect your phone to it. The settings page opens automatically, otherwise open `http://192.168.4.1`.
 3. Enter your WiFi, the evcc address (for example `http://192.168.1.10:7070`) and the loadpoint number, then save.
-4. The device restarts, joins your WiFi and is reachable at `http://wallbox-knob.local`.
+4. The device restarts, joins your WiFi and is reachable at `http://wallbox-knob.local` (round display)
+   or `http://wallbox-display.local` (T-Display).
 5. Set an **admin password** on the settings page. Without it, anyone in your network can change the
    settings or upload firmware.
 
@@ -72,9 +99,14 @@ the saved WiFi every 10 minutes.
 | Poll interval | How often the state is read from evcc (default 2000 ms) |
 | Display timeout | Seconds until the display goes dark, 0 = never |
 | Brightness | Backlight in % |
-| Full scale | kW for a full charge ring (default 22) |
-| Charge icon | evcc logo or charging station |
-| Modes and texts | Which modes are on the knob, their labels on the display and their evcc names (default `off` / `smart` / `now`; for older evcc versions use `pv` instead of `smart`) |
+| Rotation | Round display: 0, 90, 180 or 270° clockwise. T-Display: 0° (USB-C and buttons on the right) or 180°. Applied immediately |
+| Full scale | kW for a full charge ring or bar (default 22) |
+| Charge icon (round) | evcc logo or charging station |
+| Select button hint (T-Display) | evcc bolt or a text next to the select button |
+| Show home battery | Untick if you have no home battery; the round display leaves its place empty, the T-Display moves the values to the left |
+| Modes and texts | Which modes are offered, their labels on the display and their evcc names (default `off` / `smart` / `now`; for older evcc versions use `pv` instead of `smart`) |
+| Confirm hint | Round display: text below the preselected mode. T-Display: text next to the confirm button |
+| Select text, swap buttons (T-Display) | Text next to the select button; exchange the two buttons |
 | Admin password | Protects the settings page (user `admin`) and OTA |
 
 The display fonts contain ASCII only; ä ö ü ß in labels are shown as ae oe ue ss.
@@ -92,13 +124,24 @@ Used fields: `pvPower`, `battery.soc` and `battery.power`, and per loadpoint `ch
 too: state wrapped in `result`, `batterySoc` / `batteryPower` at the top level, and the modes
 `pv` / `minpv` (shown as Smart).
 
+## Hardware notes
+
+| | VIEWE UEDX24240013-MD50E | LilyGO T-Display-S3 |
+|---|---|---|
+| Chip | ESP32-C3 | ESP32-S3, 16 MB flash |
+| Display | GC9A01 via SPI (CLK 1, MOSI 0, CS 10, DC 4, RST 2) | ST7789 via 8-bit parallel (D0–D7 39–42, 45–48; WR 8, RD 9, DC 7, CS 6, RST 5) |
+| Backlight | GPIO 8, PWM, inverted | GPIO 38, PWM; display power GPIO 15 |
+| Input | encoder A/B GPIO 6/7, button GPIO 9 | KEY GPIO 14 (select), BOOT GPIO 0 (confirm) |
+
 ## Code overview
 
 | File | Content |
 |---|---|
-| `src/main.cpp` | Startup, WiFi, knob handling, timeout, animation |
-| `src/display.cpp` | GC9A01 via LovyanGFX, rendered in bands (small RAM footprint) |
+| `src/main.cpp` | Startup, WiFi, input handling, timeout, animation |
+| `src/painter.h` | Drawing primitives, icons, colours and fonts shared by both layouts |
+| `src/display_knob.cpp` | Round GC9A01 layout, rendered in bands (small RAM footprint on the C3) |
+| `src/display_tdisplay.cpp` | T-Display-S3 landscape layout with button hints |
+| `src/knob.cpp` / `src/buttons.cpp` | Rotary encoder and button / two debounced buttons |
 | `src/evcc.cpp` | evcc API client in its own task |
 | `src/web.cpp` | Settings page, captive portal, firmware upload, ArduinoOTA |
-| `src/knob.cpp` | Rotary encoder and button (interrupts) |
 | `src/config.cpp` | Settings in flash (NVS) |

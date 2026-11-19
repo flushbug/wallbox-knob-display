@@ -14,14 +14,21 @@ go-e or a wallbox integration) work by mapping your own entities and mode option
   <img src="docs/preview.svg" width="300" alt="Display layout preview">
 </p>
 
-## Two variants
+## Variants
 
-| Variant | Needs | Where |
-|---|---|---|
-| **ESPHome package** | Home Assistant + ESPHome, charge controller entities in HA | this page |
-| **Standalone firmware** | only evcc, no Home Assistant | [`standalone/`](standalone/) |
+| Variant | Board | Needs | Where |
+|---|---|---|---|
+| **ESPHome package** | VIEWE knob display (round) | Home Assistant + ESPHome, charge controller entities in HA | this page |
+| **Standalone firmware** | VIEWE knob display (round) | only evcc, no Home Assistant | [`standalone/`](standalone/) |
+| **Standalone firmware** | LilyGO T-Display-S3 (rectangular, two buttons) | only evcc, no Home Assistant | [`standalone/`](standalone/) |
 
-Both offer the same screen and knob functions and are maintained together.
+All variants offer the same functions and are maintained together. The T-Display-S3 is only
+supported by the standalone firmware; it shows a landscape layout with a charge bar instead of the
+ring and uses one button to select the mode and one to confirm it.
+
+<p align="center">
+  <img src="docs/tdisplay-preview.png" width="420" alt="T-Display-S3 layout preview">
+</p>
 
 ## Features
 
@@ -90,6 +97,8 @@ Without a home battery, simply leave the defaults: the left battery then stays e
 | `label_off` / `label_smart` / `label_now` | `Off` / `Smart` / `Fast` | Mode texts on the display |
 | `label_confirm` | `Press = OK` | Hint while a mode is preselected |
 | `charge_icon` | `evcc` | `evcc` = evcc logo, `wallbox` = charging station icon |
+| `show_home_battery` | `true` | `false` hides the home battery (if you have none); the battery entities are then not needed |
+| `display_rotation` | `0` | Rotate the screen by `0`, `90`, `180` or `270` degrees (clockwise), depending on how the display is mounted |
 | `max_charge_kw` | `22.0` | Full scale of the charge ring |
 | `batt_threshold_w` | `50.0` | Battery counts as (dis)charging above this power |
 | `display_timeout_default` | `120` | Initial display timeout in seconds |
