@@ -83,6 +83,9 @@ void evccBegin();                   // starts the background poll task
 EvccState evccGet();                // thread-safe copy of the latest state
 void evccSetMode(int mode);         // queues a mode change
 uint32_t evccVersion();             // increments on every new state
+String evccLastCommand();           // result of the last mode change, for the status page
+extern String bootInfo;             // boot counter and last reset reason, for the status page
+extern String lastInput;            // last knob/button event, for the status page
 
 // ---------------------------------------------------------------- Display
 struct UiState {
@@ -106,6 +109,7 @@ String asciiLabel(const String &s); // ä -> ae etc. (display fonts are ASCII on
 void knobBegin();
 int knobTakeSteps();                // signed steps since last call
 bool knobTakePress();               // true once per press
+String knobButtonInfo();            // round display: button level and press count, for the status page
 
 // ---------------------------------------------------------------- Web UI + OTA
 void webBegin(bool setupMode);

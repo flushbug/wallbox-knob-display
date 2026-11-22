@@ -5,7 +5,6 @@
 static volatile int32_t transitions = 0;   // valid quadrature transitions, signed
 static volatile uint8_t lastAB = 0;
 static volatile bool pressed = false;
-static volatile uint32_t lastPressMs = 0;
 static int32_t consumed = 0;
 
 // one detent of this knob = 2 transitions (like ESPHome "resolution: 2")
@@ -19,13 +18,14 @@ static void IRAM_ATTR onEncoder() {
   lastAB = ab;
 }
 
-static void IRAM_ATTR onButton() {
-  uint32_t now = millis();
-  if (now - lastPressMs > 150) {   // debounce
-    pressed = true;
-    lastPressMs = now;
-  }
-}
+// The button is read in two ways: the interrupt latches short presses that happen
+// while the main loop is busy rendering, the level is polled in knobTakePress().
+static void IRAM_ATTR onButton() { pressed = true; }
+
+constexpr uint32_t BUTTON_GUARD_MS = 150;   // ignore bounces after a press or release
+static bool held = false;
+static uint32_t buttonChangedAt = 0;
+static uint32_t pressCount = 0;
 
 void knobBegin() {
   pinMode(PIN_ENC_A, INPUT_PULLUP);
@@ -45,9 +45,26 @@ int knobTakeSteps() {
 }
 
 bool knobTakePress() {
-  if (!pressed) return false;
+  bool low = digitalRead(PIN_BUTTON) == LOW;
+  bool edge = pressed;
   pressed = false;
-  return true;
+  uint32_t now = millis();
+  if (now - buttonChangedAt < BUTTON_GUARD_MS) return false;
+  if (!held && (low || edge)) {
+    held = true;
+    buttonChangedAt = now;
+    pressCount++;
+    return true;
+  }
+  if (held && !low) {
+    held = false;
+    buttonChangedAt = now;
+  }
+  return false;
+}
+
+String knobButtonInfo() {
+  return String(digitalRead(PIN_BUTTON) == LOW ? "pressed" : "released") + ", " + String(pressCount) + " presses";
 }
 
 #endif

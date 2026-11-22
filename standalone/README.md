@@ -14,7 +14,7 @@ It runs on two boards:
   <img src="../docs/tdisplay-preview.png" width="480" alt="T-Display-S3 layout preview">
 </p>
 
-> Status: early version (0.2.0), tested on both boards with evcc 0.319.
+> Status: early version (0.2.1), tested on both boards with evcc 0.319.
 
 ## Features
 
@@ -27,7 +27,8 @@ It runs on two boards:
     hints next to the buttons show which is which
 - Display timeout; any input wakes the display without changing the mode
 - Rotation for the mounting position, home battery can be hidden
-- Local web page for all settings, status and firmware update
+- Local web page for all settings, status (incl. button state, last input and the evcc answer to the
+  last mode change) and firmware update
 - WiFi setup via its own access point with captive portal
 - Over-the-air updates via the web page or PlatformIO (ArduinoOTA)
 - evcc login with admin password or API key, if your evcc requires authentication
@@ -46,11 +47,11 @@ connect the board via USB, click *Connect*, choose the `-full.bin` at address `0
 With esptool:
 
 ```bash
-esptool.py --chip esp32c3 write_flash 0x0 wallbox-knob-0.2.0-full.bin
+esptool.py --chip esp32c3 write_flash 0x0 wallbox-knob-0.2.1-full.bin
 ```
 
 ```bash
-esptool.py --chip esp32s3 write_flash 0x0 tdisplay-s3-0.2.0-full.bin
+esptool.py --chip esp32s3 write_flash 0x0 tdisplay-s3-0.2.1-full.bin
 ```
 
 If the board is not detected, hold the knob button (round display) or the BOOT button (T-Display)
@@ -132,6 +133,10 @@ too: state wrapped in `result`, `batterySoc` / `batteryPower` at the top level, 
 | Display | GC9A01 via SPI (CLK 1, MOSI 0, CS 10, DC 4, RST 2) | ST7789 via 8-bit parallel (D0–D7 39–42, 45–48; WR 8, RD 9, DC 7, CS 6, RST 5) |
 | Backlight | GPIO 8, PWM, inverted | GPIO 38, PWM; display power GPIO 15 |
 | Input | encoder A/B GPIO 6/7, button GPIO 9 | KEY GPIO 14 (select), BOOT GPIO 0 (confirm) |
+
+If you build a housing for the round display, leave room for the press travel: the push button sits
+behind the display, and a housing that holds the display too tightly blocks it. The status page shows
+whether presses arrive (Button: n presses).
 
 ## Code overview
 

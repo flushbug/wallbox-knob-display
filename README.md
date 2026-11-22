@@ -119,6 +119,9 @@ Without a home battery, simply leave the defaults: the left battery then stays e
 The display uses the `mipi_spi` driver with a partial buffer, because the ESP32-C3 has no PSRAM and a
 full frame buffer (115 KB) does not fit next to WiFi and the API.
 
+If you build a housing, leave room for the press travel: the push button sits behind the display, and a
+housing that holds the display too tightly blocks it (turning still works, pressing does nothing).
+
 ## Credits
 
 - Pinout from the Home Assistant community and [dmit2k/viewe-knob-display-esphome](https://github.com/dmit2k/viewe-knob-display-esphome).

@@ -13,6 +13,15 @@ static EvccState state;
 static volatile uint32_t version = 0;
 static volatile int pendingMode = -1;
 static String authCookie;
+static String lastCommand = "none yet";
+
+String evccLastCommand() {
+  if (!lock) return lastCommand;
+  xSemaphoreTake(lock, portMAX_DELAY);
+  String c = lastCommand;
+  xSemaphoreGive(lock);
+  return c;
+}
 
 EvccState evccGet() {
   if (!lock) return state;   // setup mode: client not started, nothing polled yet
@@ -150,6 +159,11 @@ static bool postMode(int mode) {
     addAuth(http);
     int code = http.POST("");
     http.end();
+    String result = cfg.modeApi[mode] + ": " + (code > 0 ? "HTTP " + String(code) : HTTPClient::errorToString(code));
+    Serial.printf("[%lu] mode %s\n", millis(), result.c_str());
+    xSemaphoreTake(lock, portMAX_DELAY);
+    lastCommand = result;
+    xSemaphoreGive(lock);
     if (code == 200) return true;
     if (code == 401 && attempt == 0 && cfg.evccToken.isEmpty() && login()) continue;
     return false;

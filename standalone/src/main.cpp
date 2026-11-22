@@ -21,6 +21,8 @@ static uint32_t lastVersion = 0;
 static uint8_t appliedBrightness = 0;
 static uint8_t appliedRotation = 0;
 static bool dirty = true;
+String lastInput = "none yet";
+String bootInfo;
 
 static void wake() {
   displayOn = true;
@@ -116,6 +118,7 @@ void setup() {
   }
   bootCount++;
   ui.bootInfo = "boot " + String(bootCount) + ", " + resetName(esp_reset_reason());
+  bootInfo = ui.bootInfo;
   Serial.begin(115200);
   Serial.setTxTimeoutMs(0);   // never block when no USB host is reading
   Serial.printf("\nWallbox knob %s, reset reason %d\n", FW_VERSION, (int) esp_reset_reason());
@@ -157,6 +160,9 @@ void loop() {
   int steps = knobTakeSteps();
   bool press = knobTakePress();
   if (steps != 0 || press) {
+    lastInput = String(now / 1000) + " s: " + (press ? "press" : "turn") + (steps ? " " + String(steps) : "") +
+                (!displayOn ? ", woke display" : ui.pending >= 0 ? ", pending " + cfg.modeApi[ui.pending] : ", nothing pending");
+    Serial.printf("[%lu] input: %s\n", now, lastInput.c_str());
     if (!displayOn) {
       wokeAt = now;
       wake();

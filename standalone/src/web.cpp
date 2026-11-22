@@ -79,7 +79,13 @@ static void handleRoot() {
     h += "<tr><td>Vehicle SoC</td><td>" + fmt(s.carSoc, "%", 1, 0) + "</td></tr>";
     h += "<tr><td>Home battery</td><td>" + fmt(s.battSoc, "%", 1, 0) + "</td></tr>";
   }
+#if !defined(BOARD_TDISPLAY_S3)
+  h += "<tr><td>Button</td><td>" + knobButtonInfo() + "</td></tr>";
+#endif
+  h += "<tr><td>Last input</td><td>" + esc(lastInput) + "</td></tr>";
+  h += "<tr><td>Last mode change</td><td>" + esc(evccLastCommand()) + "</td></tr>";
   h += "<tr><td>IP</td><td>" + (setup_ ? WiFi.softAPIP().toString() : WiFi.localIP().toString()) + "</td></tr>";
+  h += "<tr><td>Uptime</td><td>" + String(millis() / 1000) + " s (" + bootInfo + ")</td></tr>";
   h += "<tr><td>Firmware</td><td>" FW_VERSION "</td></tr>";
   h += "<tr><td>Board</td><td>" + String(BOARD_NAME) + "</td></tr>";
   h += "</table></section>";
