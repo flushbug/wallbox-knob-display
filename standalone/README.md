@@ -134,7 +134,9 @@ too: state wrapped in `result`, `batterySoc` / `batteryPower` at the top level, 
 | Backlight | GPIO 8, PWM, inverted | GPIO 38, PWM; display power GPIO 15 |
 | Input | encoder A/B GPIO 6/7, button GPIO 9 | KEY GPIO 14 (select), BOOT GPIO 0 (confirm) |
 
-If you build a housing for the round display, leave room for the press travel: the push button sits
+A 3D-printable wall / cable duct enclosure for the round display is available on
+[Printables](https://www.printables.com/model/1927125-wall-cable-duct-enclosure-for-viewe-esp32-c3-rotar).
+If you build your own housing, leave room for the press travel: the push button sits
 behind the display, and a housing that holds the display too tightly blocks it. The status page shows
 whether presses arrive (Button: n presses).
 

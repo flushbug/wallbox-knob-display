@@ -119,7 +119,12 @@ Without a home battery, simply leave the defaults: the left battery then stays e
 The display uses the `mipi_spi` driver with a partial buffer, because the ESP32-C3 has no PSRAM and a
 full frame buffer (115 KB) does not fit next to WiFi and the API.
 
-If you build a housing, leave room for the press travel: the push button sits behind the display, and a
+### Housing
+
+A 3D-printable wall enclosure for the round display, made for cable duct mounting, is available on
+Printables: [Wall / cable duct enclosure for the VIEWE ESP32-C3 rotary display](https://www.printables.com/model/1927125-wall-cable-duct-enclosure-for-viewe-esp32-c3-rotar).
+
+If you build your own housing, leave room for the press travel: the push button sits behind the display, and a
 housing that holds the display too tightly blocks it (turning still works, pressing does nothing).
 
 ## Credits
